@@ -7,19 +7,23 @@ from tkinter.ttk import Combobox
 from tkcalendar import Calendar
 from datetime import datetime
 import mplcursors
-from visualizations import show_visualizations
+from visualizations import show_visualizations  # Import the new file
 
+# Load the CSV file
 data = pd.read_csv('compact.csv')
 data['date'] = pd.to_datetime(data['date'])
 
+# Connect to SQLite database and save data
 conn = sqlite3.connect('covid_data.db')
 data.to_sql('covid_data', conn, if_exists='replace', index=False)
 conn.close()
 
+# Get unique countries and date range
 countries = sorted(data['country'].unique())
 min_date = data['date'].min()
 max_date = data['date'].max()
 
+# Function to format numbers
 def format_number(num):
     if num >= 1_000_000:
         return f"{num / 1_000_000:.1f} million"
@@ -28,6 +32,7 @@ def format_number(num):
     else:
         return str(int(num))
 
+# Function to plot main graph
 def plot_graph():
     for widget in msg_frame.winfo_children():
         widget.destroy()
@@ -76,6 +81,7 @@ def plot_graph():
         plt.show()
         Label(msg_frame, text="Graph displayed successfully!", fg="green").pack()
 
+# Function to launch extra visualizations
 def launch_visualizations():
     country = country_var.get()
     start_date = cal_start.get_date()
@@ -84,30 +90,37 @@ def launch_visualizations():
     end_date = datetime.strptime(end_date, '%m/%d/%y').strftime('%Y-%m-%d')
     show_visualizations(country, start_date, end_date)
 
+# Create the GUI window
 root = Tk()
 root.title("COVID-19 Dashboard")
 root.geometry("400x650")
 root.configure(bg="#f0f0f0")
 
+# Country dropdown
 Label(root, text="Select Country:", bg="#f0f0f0", font=("Arial", 12)).pack(pady=10)
 country_var = Combobox(root, values=countries, height=10)
 country_var.set(countries[0])
 country_var.pack(pady=10)
 
+# Start date calendar
 Label(root, text="Start Date:", bg="#f0f0f0", font=("Arial", 12)).pack(pady=10)
 cal_start = Calendar(root, selectmode="day", mindate=min_date, maxdate=max_date,
                     year=min_date.year, month=min_date.month, day=min_date.day)
 cal_start.pack(pady=10)
 
+# End date calendar
 Label(root, text="End Date:", bg="#f0f0f0", font=("Arial", 12)).pack(pady=10)
 cal_end = Calendar(root, selectmode="day", mindate=min_date, maxdate=max_date,
                   year=max_date.year, month=max_date.month, day=max_date.day)
 cal_end.pack(pady=10)
 
+# Buttons
 Button(root, text="Show Main Graph", command=plot_graph, bg="#4CAF50", fg="white", font=("Arial", 12)).pack(pady=10)
 Button(root, text="Show More Visualizations", command=launch_visualizations, bg="#2196F3", fg="white", font=("Arial", 12)).pack(pady=10)
 
+# Message frame
 msg_frame = Frame(root, bg="#f0f0f0")
 msg_frame.pack(pady=5)
 
+# Run the GUI
 root.mainloop()
